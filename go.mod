@@ -13,6 +13,7 @@ require (
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/nurlantulemisov/imagecompression v0.0.0-20211028165702-e399758d3838 // indirect
 	github.com/tdewolff/parse/v2 v2.6.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
@@ -20,4 +21,5 @@ require (
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
+	gonum.org/v1/gonum v0.9.3 // indirect
 )

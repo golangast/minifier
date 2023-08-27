@@ -3,33 +3,46 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"image/png"
 	"os"
 	"regexp"
 	"strings"
 
+	compression "github.com/nurlantulemisov/imagecompression"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/js"
 )
 
 func main() {
+	//load files
 	cssfile := "./build/css/min.css"
 	jsfile := "./build/js/min.js"
+
+	//get files into []string
 	err, files := Getfiles("./css", ".css")
 	check(err)
-	Concat(files, "./build/css/min.css")
 	err, jsfiles := Getfiles("./js", ".js")
 	check(err)
+	err, imgfiles := GetImageFiles("./img")
+	check(err)
+
+	//concatenate files
+	Concat(files, "./build/css/min.css")
 	Concat(jsfiles, "./build/js/min.js")
+
+	//minify files
 	Minifycss(cssfile)
 	Minifyjs(jsfile)
 
-}
+	//optimize images
+	for _, str := range imgfiles {
+		go func() {
+			Optimizer(str)
+		}()
 
-func check(e error) {
-	if e != nil {
-		panic(e)
 	}
+
 }
 
 func Minifycss(file string) {
@@ -85,14 +98,60 @@ func Concat(files []string, fileout string) {
 func Getfiles(in, ext string) (error, []string) {
 	var filelist []string
 	files, err := os.ReadDir(in)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
+	check(err)
 	for _, file := range files {
-		fmt.Println(file.Name())
+
 		if strings.Contains(file.Name(), ext) {
 			filelist = append(filelist, in+"/"+file.Name())
 		}
 	}
 	return nil, filelist
+}
+func GetImageFiles(in string) (error, []string) {
+	var filelist []string
+	files, err := os.ReadDir(in)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	for _, file := range files {
+		fmt.Println(file.Name())
+		if strings.Contains(file.Name(), ".png") || strings.Contains(file.Name(), ".jpg") || strings.Contains(file.Name(), ".webp") {
+			filelist = append(filelist, in+"/"+file.Name())
+		}
+	}
+	return nil, filelist
+}
+
+func Optimizer(origin string) {
+	file, err := os.Open(origin)
+	check(err)
+
+	img, err := png.Decode(file)
+	check(err)
+
+	fi, err := os.Stat(origin)
+	check(err)
+
+	compressing, _ := compression.New(50)
+	compressingImage := compressing.Compress(img)
+
+	f, err := os.Create(origin)
+	check(err)
+
+	defer func(f *os.File) {
+		err := f.Close()
+		check(err)
+	}(f)
+
+	err = png.Encode(f, compressingImage)
+	check(err)
+	fif, err := os.Stat(origin)
+	check(err)
+
+	fmt.Println(origin, " before: ", fi.Size(), "after: ", fif.Size())
+}
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
